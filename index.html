@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halal Food Authority - Staff Feedback</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f9fc;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            background-image: linear-gradient(to bottom, #f5f9fc, #e8f0f7);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: #1a5f23;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            margin-top: 15px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo-img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+        
+        .logo-fallback {
+            background-color: white;
+            color: #1a5f23;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+        
+        .form-container {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a5f23;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #1a5f23;
+            box-shadow: 0 0 0 3px rgba(26, 95, 35, 0.1);
+        }
+        
+        .char-count {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .char-count.limit-reached {
+            color: #d32f2f;
+        }
+        
+        .feedback-item {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eaeaea;
+        }
+        
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+        
+        .submit-btn {
+            background-color: #1a5f23;
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .submit-btn:hover {
+            background-color: #13461a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 95, 35, 0.2);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .add-feedback-btn {
+            background-color: #f0f7f1;
+            color: #1a5f23;
+            border: 1px solid #c5e1c9;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0 20px 0;
+            width: 100%;
+        }
+        
+        .add-feedback-btn:hover {
+            background-color: #e1f0e3;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(26, 95, 35, 0.1);
+        }
+        
+        .required {
+            color: #d32f2f;
+        }
+        
+        .hint {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .thank-you-message {
+            display: none;
+            background-color: #f1f8e9;
+            border-left: 5px solid #1a5f23;
+            padding: 25px;
+            margin-top: 30px;
+            border-radius: 8px;
+        }
+        
+        .thank-you-message h3 {
+            color: #1a5f23;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .thank-you-message h3 i {
+            font-size: 1.8rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            background-color: #fafafa;
+        }
+        
+        .form-instructions {
+            background-color: #f8fdf9;
+            border: 1px solid #d4ecd8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+        
+        .form-instructions h4 {
+            color: #1a5f23;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .hidden-feedback {
+            display: none;
+        }
+        
+        .remove-feedback-btn {
+            background-color: #fef2f2;
+            color: #d32f2f;
+            border: 1px solid #fecaca;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .remove-feedback-btn:hover {
+            background-color: #fee2e2;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .logo-img, .logo-fallback {
+                max-width: 100px;
+                max-height: 100px;
+            }
+            
+            .logo-fallback {
+                width: 100px;
+                height: 100px;
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <!-- Logo with fallback if image fails to load -->
+                <img src="/image/HFA logo.jpeg" alt="HFA Logo" class="logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
+                <div id="logoFallback" class="logo-fallback" style="display: none;">
+                    HFA
+                </div>
+            </div>
+            <h1>Halal Food Authority</h1>
+            <p>HFA Staff Portal Feedback Form</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="form-instructions">
+                <h4><i class="fas fa-info-circle"></i> Instructions</h4>
+                <p>Please describe any issues or challenges you encounter when using the portals, and suggest any new features or improvements you believe would be beneficial. Your feedback is extremely important, and candid criticism is strongly encouraged. The information collected through this form will be used to improve and enhance the system moving forward.</p>
+            </div>
+            
+            <form id="feedbackForm">
+                <div class="form-group">
+                    <label for="name">Name of Staff: <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email of Staff: <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    <div class="hint">We'll only use this to follow up on your feedback if needed</div>
+                </div>
+                
+                <div class="feedback-item">
+                    <label for="feedback1">Add Feedback 1: <span class="required">*</span></label>
+                    <textarea id="feedback1" name="feedback1" maxlength="50" required placeholder="Please share your first feedback point (max 50 characters)"></textarea>
+                    <div class="char-count" id="count1">
+                        <span>Characters remaining: <span id="remaining1">50</span></span>
+                        <span>Max: 50</span>
+                    </div>
+                </div>
+                
+                <!-- Add Feedback 2 Button -->
+                <button type="button" class="add-feedback-btn" id="addFeedback2Btn">
+                    <i class="fas fa-plus-circle"></i> Add Feedback 2 (Optional)
+                </button>
+                
+                <!-- Feedback 2 Field (Initially Hidden) -->
+                <div class="feedback-item hidden-feedback" id="feedback2Container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label for="feedback2">Add Feedback 2:</label>
+                        <button type="button" class="remove-feedback-btn" id="removeFeedback2Btn">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                    <textarea id="feedback2" name="feedback2" maxlength="50" placeholder="Your second feedback point (optional)"></textarea>
+                    <div class="char-count" id="count2">
+                        <span>Characters remaining: <span id="remaining2">50</span></span>
+                        <span>Max: 50</span>
+                    </div>
+                </div>
+                
+                <!-- Add Feedback 3 Button -->
+                <button type="button" class="add-feedback-btn hidden-feedback" id="addFeedback3Btn">
+                    <i class="fas fa-plus-circle"></i> Add Feedback 3 (Optional)
+                </button>
+                
+                <!-- Feedback 3 Field (Initially Hidden) -->
+                <div class="feedback-item hidden-feedback" id="feedback3Container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label for="feedback3">Add Feedback 3:</label>
+                        <button type="button" class="remove-feedback-btn" id="removeFeedback3Btn">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                    <textarea id="feedback3" name="feedback3" maxlength="50" placeholder="Your third feedback point (optional)"></textarea>
+                    <div class="char-count" id="count3">
+                        <span>Characters remaining: <span id="remaining3">50</span></span>
+                        <span>Max: 50</span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Feedback
+                </button>
+            </form>
+            
+            <div class="thank-you-message" id="thankYouMessage">
+                <h3><i class="fas fa-check-circle"></i> Thank You for Your Feedback!</h3>
+                <p>Your feedback has been successfully submitted to the Halal Food Authority management team. We appreciate you taking the time to help us improve our services.</p>
+                <p>A confirmation email has been sent to your registered email address.</p>
+                <p style="margin-top: 15px; font-style: italic;">You may close this page or wait to be redirected.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Halal Food Authority &copy; <span id="currentYear"></span> | All feedback is confidential and will be reviewed by the management team.</p>
+            <p style="margin-top: 5px; font-size: 0.85rem;"><i class="fas fa-shield-alt"></i> Secure & Confidential</p>
+        </div>
+    </div>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // Check if logo image exists, show fallback if not
+        window.addEventListener('load', function() {
+            const logoImg = document.querySelector('.logo-img');
+            const logoFallback = document.getElementById('logoFallback');
+            
+            // If image hasn't loaded after 2 seconds, show fallback
+            setTimeout(() => {
+                if (logoImg && logoImg.naturalHeight === 0) {
+                    logoImg.style.display = 'none';
+                    if (logoFallback) logoFallback.style.display = 'flex';
+                }
+            }, 2000);
+        });
+        
+        // Character count functionality for all feedback fields
+        const feedbackFields = ['feedback1', 'feedback2', 'feedback3'];
+        
+        feedbackFields.forEach((fieldId, index) => {
+            const textarea = document.getElementById(fieldId);
+            if (textarea) {
+                const remainingSpan = document.getElementById(`remaining${index + 1}`);
+                const charCountDiv = document.getElementById(`count${index + 1}`);
+                
+                textarea.addEventListener('input', function() {
+                    const currentLength = this.value.length;
+                    const remaining = 50 - currentLength;
+                    
+                    if (remainingSpan) {
+                        remainingSpan.textContent = remaining;
+                    }
+                    
+                    // Update styling when limit is reached
+                    if (charCountDiv) {
+                        if (remaining <= 0) {
+                            charCountDiv.classList.add('limit-reached');
+                            if (remainingSpan) remainingSpan.textContent = '0';
+                        } else {
+                            charCountDiv.classList.remove('limit-reached');
+                        }
+                    }
+                });
+                
+                // Initialize character count on page load
+                const currentLength = textarea.value.length;
+                const remaining = 50 - currentLength;
+                if (remainingSpan) {
+                    remainingSpan.textContent = remaining;
+                    
+                    if (remaining <= 0) {
+                        if (charCountDiv) charCountDiv.classList.add('limit-reached');
+                        remainingSpan.textContent = '0';
+                    }
+                }
+            }
+        });
+        
+        // Show/hide functionality for additional feedback fields
+        document.getElementById('addFeedback2Btn').addEventListener('click', function() {
+            // Show feedback 2 field
+            document.getElementById('feedback2Container').classList.remove('hidden-feedback');
+            // Show add feedback 3 button
+            document.getElementById('addFeedback3Btn').classList.remove('hidden-feedback');
+            // Hide this button
+            this.classList.add('hidden-feedback');
+            
+            // Focus on the textarea
+            document.getElementById('feedback2').focus();
+        });
+        
+        document.getElementById('removeFeedback2Btn').addEventListener('click', function() {
+            // Hide feedback 2 field
+            document.getElementById('feedback2Container').classList.add('hidden-feedback');
+            // Clear the textarea
+            document.getElementById('feedback2').value = '';
+            // Reset character count
+            document.getElementById('remaining2').textContent = '50';
+            document.getElementById('count2').classList.remove('limit-reached');
+            // Show add feedback 2 button again
+            document.getElementById('addFeedback2Btn').classList.remove('hidden-feedback');
+            // Hide feedback 3 if it's visible
+            document.getElementById('feedback3Container').classList.add('hidden-feedback');
+            document.getElementById('feedback3').value = '';
+            document.getElementById('remaining3').textContent = '50';
+            document.getElementById('count3').classList.remove('limit-reached');
+            // Hide add feedback 3 button
+            document.getElementById('addFeedback3Btn').classList.add('hidden-feedback');
+        });
+        
+        document.getElementById('addFeedback3Btn').addEventListener('click', function() {
+            // Show feedback 3 field
+            document.getElementById('feedback3Container').classList.remove('hidden-feedback');
+            // Hide this button
+            this.classList.add('hidden-feedback');
+            
+            // Focus on the textarea
+            document.getElementById('feedback3').focus();
+        });
+        
+        document.getElementById('removeFeedback3Btn').addEventListener('click', function() {
+            // Hide feedback 3 field
+            document.getElementById('feedback3Container').classList.add('hidden-feedback');
+            // Clear the textarea
+            document.getElementById('feedback3').value = '';
+            // Reset character count
+            document.getElementById('remaining3').textContent = '50';
+            document.getElementById('count3').classList.remove('limit-reached');
+            // Show add feedback 3 button again
+            document.getElementById('addFeedback3Btn').classList.remove('hidden-feedback');
+        });
+        
+        // Form submission handling
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Basic validation
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const feedback1 = document.getElementById('feedback1').value.trim();
+            
+            if (!name || !email || !feedback1) {
+                alert('Please fill in all required fields (Name, Email, and at least one feedback point).');
+                return;
+            }
+            
+            // Email validation
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            
+            // Show thank you message
+            document.getElementById('feedbackForm').style.display = 'none';
+            document.getElementById('thankYouMessage').style.display = 'block';
+            
+            // In a real application, you would send the form data to a server here
+            console.log('Form submitted with data:');
+            console.log('Name:', name);
+            console.log('Email:', email);
+            console.log('Feedback 1:', feedback1);
+            console.log('Feedback 2:', document.getElementById('feedback2').value.trim());
+            console.log('Feedback 3:', document.getElementById('feedback3').value.trim());
+            
+            // Simulate form submission
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                // Reset form after a few seconds (for demo purposes)
+                document.getElementById('feedbackForm').reset();
+                document.getElementById('feedbackForm').style.display = 'block';
+                document.getElementById('thankYouMessage').style.display = 'none';
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Reset character counts
+                feedbackFields.forEach((fieldId, index) => {
+                    const remainingSpan = document.getElementById(`remaining${index + 1}`);
+                    const charCountDiv = document.getElementById(`count${index + 1}`);
+                    if (remainingSpan) remainingSpan.textContent = '50';
+                    if (charCountDiv) charCountDiv.classList.remove('limit-reached');
+                });
+                
+                // Hide additional feedback fields
+                document.getElementById('feedback2Container').classList.add('hidden-feedback');
+                document.getElementById('feedback3Container').classList.add('hidden-feedback');
+                document.getElementById('addFeedback3Btn').classList.add('hidden-feedback');
+                document.getElementById('addFeedback2Btn').classList.remove('hidden-feedback');
+                
+                // For demo purposes, show an alert
+                alert('Thank you! Your feedback has been submitted successfully.');
+            }, 3000);
+        });
+        
+        // Add input validation for name field (letters and spaces only)
+        document.getElementById('name').addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+        });
+    </script>
+</body>
+</html>
