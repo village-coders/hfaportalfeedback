@@ -24,7 +24,7 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 30px auto;
             background-color: white;
             border-radius: 15px;
@@ -293,7 +293,7 @@
             gap: 10px;
         }
         
-        /* API Data Display Section */
+        /* API Data Display Section - Updated for toggle view */
         .api-data-section {
             margin-top: 40px;
             padding: 25px;
@@ -318,44 +318,84 @@
         }
         
         .api-data-container {
-            max-height: 400px;
-            overflow-y: auto;
             padding: 10px;
-            background-color: white;
-            border-radius: 8px;
-            border: 1px solid #eaeaea;
         }
         
         .api-data-item {
             padding: 15px;
             margin-bottom: 15px;
-            background-color: #f9f9f9;
-            border-left: 4px solid #1a5f23;
-            border-radius: 6px;
+            background-color: white;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
             transition: all 0.3s ease;
         }
         
         .api-data-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
         
-        .api-data-item h4 {
+        .api-data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+        
+        .api-data-header h4 {
             color: #1a5f23;
-            margin-bottom: 8px;
             font-size: 1.1rem;
+            margin: 0;
         }
         
-        .api-data-item p {
-            margin-bottom: 5px;
+        .view-toggle-btn {
+            background-color: #e1f0e3;
+            color: #1a5f23;
+            border: 1px solid #c5e1c9;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .view-toggle-btn:hover {
+            background-color: #d1e8d4;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(26, 95, 35, 0.1);
+        }
+        
+        .api-data-details {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #1a5f23;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .api-data-details p {
+            margin-bottom: 10px;
             color: #555;
             line-height: 1.5;
         }
         
-        .api-data-item .timestamp {
+        .api-data-details .timestamp {
             font-size: 0.85rem;
             color: #888;
             font-style: italic;
+            margin-top: 15px;
         }
         
         .api-loading {
@@ -406,6 +446,43 @@
             font-style: italic;
         }
         
+        /* Feedback counter */
+        .feedback-counter {
+            background-color: #e1f0e3;
+            color: #1a5f23;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        /* Full feedback display */
+        .full-feedback {
+            background-color: #f8fdf9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 1px dashed #c5e1c9;
+        }
+        
+        .full-feedback h5 {
+            color: #1a5f23;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .full-feedback p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        
+        .feedback-label {
+            font-weight: 600;
+            color: #1a5f23;
+            margin-right: 5px;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 margin: 10px auto;
@@ -439,6 +516,16 @@
                 padding: 15px;
                 margin-top: 20px;
             }
+            
+            .api-data-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .view-toggle-btn {
+                align-self: flex-start;
+            }
         }
     </style>
 </head>
@@ -460,6 +547,7 @@
             <div class="form-instructions">
                 <h4><i class="fas fa-info-circle"></i> Instructions</h4>
                 <p>Please describe any issues or challenges you encounter when using the portals, and suggest any new features or improvements you believe would be beneficial. Your feedback is extremely important, and candid criticism is strongly encouraged. The information collected through this form will be used to improve and enhance the system moving forward.</p>
+                <p><strong>Note:</strong> Each feedback point can now be up to 200 characters.</p>
             </div>
             
             <div class="error-message" id="errorMessage">
@@ -481,10 +569,10 @@
                 
                 <div class="feedback-item">
                     <label for="feedback1">Add Feedback 1: <span class="required">*</span></label>
-                    <textarea id="feedback1" name="feedback1" maxlength="50" required placeholder="Please share your first feedback point (max 50 characters)"></textarea>
+                    <textarea id="feedback1" name="feedback1" maxlength="200" required placeholder="Please share your first feedback point (max 200 characters)"></textarea>
                     <div class="char-count" id="count1">
-                        <span>Characters remaining: <span id="remaining1">50</span></span>
-                        <span>Max: 50</span>
+                        <span>Characters remaining: <span id="remaining1">200</span></span>
+                        <span>Max: 200</span>
                     </div>
                 </div>
                 
@@ -501,10 +589,10 @@
                             <i class="fas fa-times"></i> Remove
                         </button>
                     </div>
-                    <textarea id="feedback2" name="feedback2" maxlength="50" placeholder="Your second feedback point (optional)"></textarea>
+                    <textarea id="feedback2" name="feedback2" maxlength="200" placeholder="Your second feedback point (optional)"></textarea>
                     <div class="char-count" id="count2">
-                        <span>Characters remaining: <span id="remaining2">50</span></span>
-                        <span>Max: 50</span>
+                        <span>Characters remaining: <span id="remaining2">200</span></span>
+                        <span>Max: 200</span>
                     </div>
                 </div>
                 
@@ -521,10 +609,10 @@
                             <i class="fas fa-times"></i> Remove
                         </button>
                     </div>
-                    <textarea id="feedback3" name="feedback3" maxlength="50" placeholder="Your third feedback point (optional)"></textarea>
+                    <textarea id="feedback3" name="feedback3" maxlength="200" placeholder="Your third feedback point (optional)"></textarea>
                     <div class="char-count" id="count3">
-                        <span>Characters remaining: <span id="remaining3">50</span></span>
-                        <span>Max: 50</span>
+                        <span>Characters remaining: <span id="remaining3">200</span></span>
+                        <span>Max: 200</span>
                     </div>
                 </div>
                 
@@ -583,8 +671,9 @@
             }, 2000);
         });
         
-        // Character count functionality for all feedback fields
+        // Character count functionality for all feedback fields - UPDATED TO 200 CHARACTERS
         const feedbackFields = ['feedback1', 'feedback2', 'feedback3'];
+        const MAX_CHARS = 200;
         
         feedbackFields.forEach((fieldId, index) => {
             const textarea = document.getElementById(fieldId);
@@ -592,9 +681,16 @@
                 const remainingSpan = document.getElementById(`remaining${index + 1}`);
                 const charCountDiv = document.getElementById(`count${index + 1}`);
                 
+                // Update the max attribute to 200
+                textarea.setAttribute('maxlength', MAX_CHARS);
+                
+                // Update the display text
+                const maxSpan = charCountDiv.querySelector('span:nth-child(2)');
+                if (maxSpan) maxSpan.textContent = `Max: ${MAX_CHARS}`;
+                
                 textarea.addEventListener('input', function() {
                     const currentLength = this.value.length;
-                    const remaining = 50 - currentLength;
+                    const remaining = MAX_CHARS - currentLength;
                     
                     if (remainingSpan) {
                         remainingSpan.textContent = remaining;
@@ -613,7 +709,7 @@
                 
                 // Initialize character count on page load
                 const currentLength = textarea.value.length;
-                const remaining = 50 - currentLength;
+                const remaining = MAX_CHARS - currentLength;
                 if (remainingSpan) {
                     remainingSpan.textContent = remaining;
                     
@@ -644,14 +740,14 @@
             // Clear the textarea
             document.getElementById('feedback2').value = '';
             // Reset character count
-            document.getElementById('remaining2').textContent = '50';
+            document.getElementById('remaining2').textContent = MAX_CHARS;
             document.getElementById('count2').classList.remove('limit-reached');
             // Show add feedback 2 button again
             document.getElementById('addFeedback2Btn').classList.remove('hidden-feedback');
             // Hide feedback 3 if it's visible
             document.getElementById('feedback3Container').classList.add('hidden-feedback');
             document.getElementById('feedback3').value = '';
-            document.getElementById('remaining3').textContent = '50';
+            document.getElementById('remaining3').textContent = MAX_CHARS;
             document.getElementById('count3').classList.remove('limit-reached');
             // Hide add feedback 3 button
             document.getElementById('addFeedback3Btn').classList.add('hidden-feedback');
@@ -673,7 +769,7 @@
             // Clear the textarea
             document.getElementById('feedback3').value = '';
             // Reset character count
-            document.getElementById('remaining3').textContent = '50';
+            document.getElementById('remaining3').textContent = MAX_CHARS;
             document.getElementById('count3').classList.remove('limit-reached');
             // Show add feedback 3 button again
             document.getElementById('addFeedback3Btn').classList.remove('hidden-feedback');
@@ -809,7 +905,7 @@
             feedbackFields.forEach((fieldId, index) => {
                 const remainingSpan = document.getElementById(`remaining${index + 1}`);
                 const charCountDiv = document.getElementById(`count${index + 1}`);
-                if (remainingSpan) remainingSpan.textContent = '50';
+                if (remainingSpan) remainingSpan.textContent = MAX_CHARS;
                 if (charCountDiv) charCountDiv.classList.remove('limit-reached');
             });
             
@@ -823,7 +919,7 @@
             document.getElementById('errorMessage').style.display = 'none';
         }
         
-        // API Data Fetching and Display Functionality
+        // API Data Fetching and Display Functionality with toggle view
         async function fetchAPIData() {
             const apiDataSection = document.getElementById('apiDataSection');
             const apiLoading = document.getElementById('apiLoading');
@@ -845,9 +941,6 @@
                 }
                 
                 const data = await response.json();
-
-                // console.log(data.data);
-                
                 
                 // Hide loading
                 apiLoading.style.display = 'none';
@@ -860,7 +953,7 @@
                 
                 // Check if data exists and is an array
                 if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-                    // Display each item
+                    // Display each item with toggle functionality
                     data.data.forEach((item, index) => {
                         const dataItem = document.createElement('div');
                         dataItem.className = 'api-data-item';
@@ -885,14 +978,36 @@
                             });
                         }
                         
-                        // Create HTML for the data item
+                        // Count how many feedbacks are provided
+                        let feedbackCount = 1; // feedback1 is always required
+                        if (feedback2 && feedback2 !== 'Not provided' && feedback2.trim() !== '') feedbackCount++;
+                        if (feedback3 && feedback3 !== 'Not provided' && feedback3.trim() !== '') feedbackCount++;
+                        
+                        // Create HTML for the data item with toggle functionality
                         dataItem.innerHTML = `
-                            <h4>Submission ${index + 1}: ${name}</h4>
-                            <p><strong>Email:</strong> ${email}</p>
-                            <p><strong>Feedback 1:</strong> ${feedback1}</p>
-                            <p><strong>Feedback 2:</strong> ${feedback2}</p>
-                            <p><strong>Feedback 3:</strong> ${feedback3}</p>
-                            <p class="timestamp"><i class="far fa-clock"></i> Submitted: ${timestamp}</p>
+                            <div class="api-data-header" onclick="toggleFeedbackDetails(${index})">
+                                <h4>
+                                    ${name}
+                                    <span class="feedback-counter">${feedbackCount} feedback${feedbackCount !== 1 ? 's' : ''}</span>
+                                </h4>
+                                <button class="view-toggle-btn" id="viewToggle${index}">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </div>
+                            <div class="api-data-details" id="feedbackDetails${index}">
+                                <p><span class="feedback-label">Email:</span> ${email}</p>
+                                
+                                <div class="full-feedback">
+                                    <h5>Full Feedback Details:</h5>
+                                    <p><span class="feedback-label">Feedback 1:</span> ${feedback1}</p>
+                                    ${feedback2 && feedback2 !== 'Not provided' && feedback2.trim() !== '' ? 
+                                        `<p><span class="feedback-label">Feedback 2:</span> ${feedback2}</p>` : ''}
+                                    ${feedback3 && feedback3 !== 'Not provided' && feedback3.trim() !== '' ? 
+                                        `<p><span class="feedback-label">Feedback 3:</span> ${feedback3}</p>` : ''}
+                                </div>
+                                
+                                <p class="timestamp"><i class="far fa-clock"></i> Submitted: ${timestamp}</p>
+                            </div>
                         `;
                         
                         apiDataContainer.appendChild(dataItem);
@@ -927,6 +1042,22 @@
                 apiError.style.display = 'block';
             }
         }
+        
+        // Toggle function for showing/hiding feedback details
+        window.toggleFeedbackDetails = function(index) {
+            const detailsElement = document.getElementById(`feedbackDetails${index}`);
+            const toggleButton = document.getElementById(`viewToggle${index}`);
+            
+            if (detailsElement.style.display === 'block') {
+                // Hide details
+                detailsElement.style.display = 'none';
+                toggleButton.innerHTML = '<i class="fas fa-eye"></i> View Details';
+            } else {
+                // Show details
+                detailsElement.style.display = 'block';
+                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Details';
+            }
+        };
         
         // Add refresh button functionality
         document.getElementById('refreshApiBtn').addEventListener('click', fetchAPIData);
