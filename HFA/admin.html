@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFA Feedback Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f9fc;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            background-image: linear-gradient(to bottom, #f5f9fc, #e8f0f7);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: #1a5f23;
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-left h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .header-left p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .admin-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .admin-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .admin-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid white;
+            object-fit: contain;
+        }
+        
+        .dashboard-container {
+            padding: 30px;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: #f8fdf9;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            border-left: 5px solid #1a5f23;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #1a5f23;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .filters-container {
+            background-color: #f8fdf9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #d4ecd8;
+        }
+        
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .filters-header h3 {
+            color: #1a5f23;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a5f23;
+            font-size: 0.9rem;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #1a5f23;
+            box-shadow: 0 0 0 3px rgba(26, 95, 35, 0.1);
+        }
+        
+        .filter-btn {
+            background-color: #1a5f23;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-end;
+            height: 42px;
+        }
+        
+        .filter-btn:hover {
+            background-color: #13461a;
+        }
+        
+        .feedback-table-container {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .table-header {
+            background-color: #1a5f23;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .table-action-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .table-action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: #f0f7f1;
+            color: #1a5f23;
+            font-weight: 600;
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #d4ecd8;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        tr:hover {
+            background-color: #f8fdf9;
+        }
+        
+        .feedback-item {
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #888;
+        }
+        
+        
+        
+        .export-btn {
+            background-color: #1a5f23;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .export-btn:hover {
+            background-color: #13461a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 95, 35, 0.2);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-new {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .status-reviewed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: #1a5f23;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            color: #13461a;
+            transform: scale(1.2);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            background-color: #1a5f23;
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .feedback-detail-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .feedback-detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .feedback-detail-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #1a5f23;
+            font-size: 0.9rem;
+        }
+        
+        .feedback-detail-item p {
+            padding: 10px;
+            background-color: #f8fdf9;
+            border-radius: 6px;
+            border-left: 3px solid #1a5f23;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .logo-container {
+                justify-content: center;
+            }
+            
+            .admin-controls {
+                justify-content: center;
+            }
+            
+            th, td {
+                padding: 10px 5px;
+                font-size: 0.9rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="/image/HFA logo.jpeg" alt="HFA Logo" class="logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
+                    
+                </div>
+                <div class="header-left">
+                    <h1>HFA Admin Dashboard</h1>
+                    <p>Staff Feedback Management System</p>
+                </div>
+            </div>
+            
+            <div class="admin-controls">
+                <button class="admin-btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="admin-btn" id="clearAllBtn">
+                    <i class="fas fa-trash-alt"></i> Clear All
+                </button>
+                <button class="admin-btn" id="backToFormBtn">
+                    <i class="fas fa-arrow-left"></i> Back to Form
+                </button>
+            </div>
+        </div>
+        
+        <div class="dashboard-container">
+            <!-- Statistics Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSubmissions">0</div>
+                    <div class="stat-label">Total Submissions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todaySubmissions">0</div>
+                    <div class="stat-label">Today's Submissions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="newSubmissions">0</div>
+                    <div class="stat-label">New (Unreviewed)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="withMultipleFeedback">0</div>
+                    <div class="stat-label">With Multiple Feedback</div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters-container">
+                <div class="filters-header">
+                    <h3><i class="fas fa-filter"></i> Filter Feedback</h3>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="searchName">Search by Name</label>
+                        <input type="text" id="searchName" class="filter-input" placeholder="Enter staff name...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterStatus">Filter by Status</label>
+                        <select id="filterStatus" class="filter-input">
+                            <option value="all">All Status</option>
+                            <option value="new">New (Unreviewed)</option>
+                            <option value="reviewed">Reviewed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateFrom">Date From</label>
+                        <input type="date" id="dateFrom" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateTo">Date To</label>
+                        <input type="date" id="dateTo" class="filter-input">
+                    </div>
+                    <button class="filter-btn" id="applyFiltersBtn">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <button class="filter-btn" id="resetFiltersBtn" style="background-color: #666;">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Feedback Table -->
+            <div class="feedback-table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-list"></i> Feedback Submissions</h3>
+                    <div class="table-actions">
+                        <button class="table-action-btn" id="markAllReviewedBtn">
+                            <i class="fas fa-check-circle"></i> Mark All Reviewed
+                        </button>
+                        <button class="table-action-btn" id="deleteSelectedBtn">
+                            <i class="fas fa-trash"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="feedbackTableContainer">
+                    <table id="feedbackTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 30px;"><input type="checkbox" id="selectAllCheckbox"></th>
+                                <th style="width: 50px;">ID</th>
+                                <th>Staff Name</th>
+                                <th>Email</th>
+                                <th>Feedback 1</th>
+                                <th>Feedback 2</th>
+                                <th>Feedback 3</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbackTableBody">
+                            <!-- Feedback rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="emptyTableState" class="empty-state" style="display: none;">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Feedback Submissions Yet</h3>
+                        <p>Staff feedback will appear here once they submit through the feedback form.</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- Feedback Detail Modal -->
+    <div class="modal" id="feedbackDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-eye"></i> Feedback Details</h3>
+                <button class="close-modal" id="closeDetailModal">&times;</button>
+            </div>
+            <div class="modal-body" id="feedbackDetailContent">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Action</h3>
+                <button class="close-modal" id="closeConfirmationModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationMessage">Are you sure you want to perform this action?</p>
+                <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 25px;">
+                    <button class="filter-btn" id="confirmActionBtn" style="background-color: #d32f2f;">
+                        Confirm
+                    </button>
+                    <button class="filter-btn" id="cancelActionBtn" style="background-color: #666;">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize storage for feedback data
+        let feedbackData = [];
+        
+        // DOM elements
+        const feedbackTableBody = document.getElementById('feedbackTableBody');
+        const emptyTableState = document.getElementById('emptyTableState');
+        const totalSubmissionsEl = document.getElementById('totalSubmissions');
+        const todaySubmissionsEl = document.getElementById('todaySubmissions');
+        const newSubmissionsEl = document.getElementById('newSubmissions');
+        const withMultipleFeedbackEl = document.getElementById('withMultipleFeedback');
+        const feedbackDetailModal = document.getElementById('feedbackDetailModal');
+        const feedbackDetailContent = document.getElementById('feedbackDetailContent');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const confirmationMessage = document.getElementById('confirmationMessage');
+        
+        // Current filter state
+        let currentFilters = {
+            name: '',
+            status: 'all',
+            dateFrom: '',
+            dateTo: ''
+        };
+        
+        // Action to be confirmed
+        let pendingAction = null;
+        
+        // Load feedback data from localStorage
+        function loadFeedbackData() {
+            const storedData = localStorage.getItem('hfaFeedbackData');
+            if (storedData) {
+                try {
+                    feedbackData = JSON.parse(storedData);
+                } catch (e) {
+                    console.error('Error parsing feedback data:', e);
+                    feedbackData = [];
+                }
+            }
+            updateStatistics();
+            renderFeedbackTable();
+        }
+        
+        // Save feedback data to localStorage
+        function saveFeedbackData() {
+            localStorage.setItem('hfaFeedbackData', JSON.stringify(feedbackData));
+            updateStatistics();
+        }
+        
+        // Update statistics cards
+        function updateStatistics() {
+            const total = feedbackData.length;
+            const today = new Date().toISOString().split('T')[0];
+            const todayCount = feedbackData.filter(item => item.date === today).length;
+            const newCount = feedbackData.filter(item => item.status === 'new').length;
+            const multipleCount = feedbackData.filter(item => 
+                (item.feedback2 && item.feedback2.trim() !== '') || 
+                (item.feedback3 && item.feedback3.trim() !== '')
+            ).length;
+            
+            totalSubmissionsEl.textContent = total;
+            todaySubmissionsEl.textContent = todayCount;
+            newSubmissionsEl.textContent = newCount;
+            withMultipleFeedbackEl.textContent = multipleCount;
+        }
+        
+        // Render feedback table with current filters
+        function renderFeedbackTable() {
+            feedbackTableBody.innerHTML = '';
+            
+            // Apply filters
+            let filteredData = feedbackData.filter(item => {
+                // Filter by name
+                if (currentFilters.name && 
+                    !item.name.toLowerCase().includes(currentFilters.name.toLowerCase())) {
+                    return false;
+                }
+                
+                // Filter by status
+                if (currentFilters.status !== 'all' && item.status !== currentFilters.status) {
+                    return false;
+                }
+                
+                // Filter by date range
+                if (currentFilters.dateFrom && item.date < currentFilters.dateFrom) {
+                    return false;
+                }
+                
+                if (currentFilters.dateTo && item.date > currentFilters.dateTo) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Sort by date (newest first)
+            filteredData.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+            
+            if (filteredData.length === 0) {
+                emptyTableState.style.display = 'block';
+                document.getElementById('feedbackTable').style.display = 'none';
+                return;
+            }
+            
+            emptyTableState.style.display = 'none';
+            document.getElementById('feedbackTable').style.display = 'table';
+            
+            // Create table rows
+            filteredData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                // Checkbox for selection
+                row.innerHTML = `
+                    <td><input type="checkbox" class="feedback-checkbox" data-id="${item.id}"></td>
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td>${escapeHtml(item.email)}</td>
+                    <td class="feedback-item">${escapeHtml(item.feedback1)}</td>
+                    <td class="feedback-item">${item.feedback2 ? escapeHtml(item.feedback2) : '<span class="no-data">-</span>'}</td>
+                    <td class="feedback-item">${item.feedback3 ? escapeHtml(item.feedback3) : '<span class="no-data">-</span>'}</td>
+                    <td>${formatDate(item.date)}<br><small>${item.time}</small></td>
+                    <td><span class="status-badge status-${item.status}">${item.status === 'new' ? 'New' : 'Reviewed'}</span></td>
+                    <td>
+                        <button class="action-btn view-btn" data-id="${item.id}" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn status-btn" data-id="${item.id}" title="${item.status === 'new' ? 'Mark as Reviewed' : 'Mark as New'}">
+                            <i class="fas ${item.status === 'new' ? 'fa-check' : 'fa-undo'}"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${item.id}" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                feedbackTableBody.appendChild(row);
+            });
+            
+            // Attach event listeners to action buttons
+            attachRowEventListeners();
+        }
+        
+        // Attach event listeners to table row buttons
+        function attachRowEventListeners() {
+            // View buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showFeedbackDetails(id);
+                });
+            });
+            
+            // Status toggle buttons
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    toggleFeedbackStatus(id);
+                });
+            });
+            
+            // Delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showConfirmation('Are you sure you want to delete this feedback?', () => {
+                        deleteFeedback(id);
+                    });
+                });
+            });
+            
+            // Checkbox for select all
+            document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.feedback-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        }
+        
+        // Show feedback details in modal
+        function showFeedbackDetails(id) {
+            const feedback = feedbackData.find(item => item.id === id);
+            if (!feedback) return;
+            
+            let feedback2Content = feedback.feedback2 ? 
+                `<p>${escapeHtml(feedback.feedback2)}</p>` : 
+                '<p class="no-data">No feedback provided</p>';
+                
+            let feedback3Content = feedback.feedback3 ? 
+                `<p>${escapeHtml(feedback.feedback3)}</p>` : 
+                '<p class="no-data">No feedback provided</p>';
+            
+            feedbackDetailContent.innerHTML = `
+                <div class="feedback-detail-item">
+                    <label>Submission ID:</label>
+                    <p>${feedback.id}</p>
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Staff Name:</label>
+                    <p>${escapeHtml(feedback.name)}</p>
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Email Address:</label>
+                    <p>${escapeHtml(feedback.email)}</p>
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Submission Date & Time:</label>
+                    <p>${formatDate(feedback.date)} at ${feedback.time}</p>
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Status:</label>
+                    <p><span class="status-badge status-${feedback.status}">${feedback.status === 'new' ? 'New (Unreviewed)' : 'Reviewed'}</span></p>
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Feedback 1:</label>
+                    <p>${escapeHtml(feedback.feedback1)}</p>
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Feedback 2:</label>
+                    ${feedback2Content}
+                </div>
+                <div class="feedback-detail-item">
+                    <label>Feedback 3:</label>
+                    ${feedback3Content}
+                </div>
+                <div style="margin-top: 25px; display: flex; gap: 15px; justify-content: flex-end;">
+                    <button class="filter-btn" id="markAsReviewedBtn" data-id="${feedback.id}" style="background-color: ${feedback.status === 'new' ? '#1a5f23' : '#666'};">
+                        <i class="fas ${feedback.status === 'new' ? 'fa-check' : 'fa-undo'}"></i> ${feedback.status === 'new' ? 'Mark as Reviewed' : 'Mark as New'}
+                    </button>
+                    <button class="filter-btn" id="deleteThisFeedbackBtn" data-id="${feedback.id}" style="background-color: #d32f2f;">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            `;
+            
+            // Attach event listeners for modal buttons
+            document.getElementById('markAsReviewedBtn').addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                toggleFeedbackStatus(id);
+                feedbackDetailModal.style.display = 'none';
+            });
+            
+            document.getElementById('deleteThisFeedbackBtn').addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                feedbackDetailModal.style.display = 'none';
+                showConfirmation('Are you sure you want to delete this feedback?', () => {
+                    deleteFeedback(id);
+                });
+            });
+            
+            feedbackDetailModal.style.display = 'flex';
+        }
+        
+        // Toggle feedback status between new and reviewed
+        function toggleFeedbackStatus(id) {
+            const index = feedbackData.findIndex(item => item.id === id);
+            if (index !== -1) {
+                feedbackData[index].status = feedbackData[index].status === 'new' ? 'reviewed' : 'new';
+                saveFeedbackData();
+                renderFeedbackTable();
+            }
+        }
+        
+        // Delete a feedback entry
+        function deleteFeedback(id) {
+            feedbackData = feedbackData.filter(item => item.id !== id);
+            saveFeedbackData();
+            renderFeedbackTable();
+        }
+        
+        // Show confirmation modal
+        function showConfirmation(message, callback) {
+            confirmationMessage.textContent = message;
+            pendingAction = callback;
+            confirmationModal.style.display = 'flex';
+        }
+        
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Get selected feedback IDs
+        function getSelectedFeedbackIds() {
+            const checkboxes = document.querySelectorAll('.feedback-checkbox:checked');
+            return Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
+        }
+        
+        // Mark all as reviewed
+        function markAllAsReviewed() {
+            const selectedIds = getSelectedFeedbackIds();
+            let idsToUpdate = selectedIds;
+            
+            // If nothing is selected, update all visible
+            if (selectedIds.length === 0) {
+                const visibleRows = document.querySelectorAll('#feedbackTableBody tr');
+                idsToUpdate = Array.from(visibleRows).map(row => {
+                    const checkbox = row.querySelector('.feedback-checkbox');
+                    return checkbox ? checkbox.getAttribute('data-id') : null;
+                }).filter(id => id !== null);
+            }
+            
+            idsToUpdate.forEach(id => {
+                const index = feedbackData.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    feedbackData[index].status = 'reviewed';
+                }
+            });
+            
+            saveFeedbackData();
+            renderFeedbackTable();
+            document.getElementById('selectAllCheckbox').checked = false;
+        }
+        
+        // Delete selected feedback
+        function deleteSelectedFeedback() {
+            const selectedIds = getSelectedFeedbackIds();
+            
+            if (selectedIds.length === 0) {
+                alert('Please select feedback to delete.');
+                return;
+            }
+            
+            showConfirmation(`Are you sure you want to delete ${selectedIds.length} selected feedback item(s)?`, () => {
+                feedbackData = feedbackData.filter(item => !selectedIds.includes(item.id));
+                saveFeedbackData();
+                renderFeedbackTable();
+                document.getElementById('selectAllCheckbox').checked = false;
+            });
+        }
+        
+        // Clear all feedback
+        function clearAllFeedback() {
+            if (feedbackData.length === 0) {
+                alert('No feedback data to clear.');
+                return;
+            }
+            
+            showConfirmation('Are you sure you want to delete ALL feedback data? This action cannot be undone.', () => {
+                feedbackData = [];
+                saveFeedbackData();
+                renderFeedbackTable();
+            });
+        }
+        
+        // Export to CSV
+        function exportToCSV() {
+            if (feedbackData.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            const headers = ['ID', 'Name', 'Email', 'Feedback 1', 'Feedback 2', 'Feedback 3', 'Date', 'Time', 'Status'];
+            const csvRows = [headers.join(',')];
+            
+            feedbackData.forEach(item => {
+                const row = [
+                    item.id,
+                    `"${item.name.replace(/"/g, '""')}"`,
+                    `"${item.email}"`,
+                    `"${item.feedback1.replace(/"/g, '""')}"`,
+                    item.feedback2 ? `"${item.feedback2.replace(/"/g, '""')}"` : '',
+                    item.feedback3 ? `"${item.feedback3.replace(/"/g, '""')}"` : '',
+                    item.date,
+                    item.time,
+                    item.status
+                ];
+                csvRows.push(row.join(','));
+            });
+            
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hfa-feedback-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Export to JSON
+        function exportToJSON() {
+            if (feedbackData.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            const jsonContent = JSON.stringify(feedbackData, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hfa-feedback-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            currentFilters.name = document.getElementById('searchName').value;
+            currentFilters.status = document.getElementById('filterStatus').value;
+            currentFilters.dateFrom = document.getElementById('dateFrom').value;
+            currentFilters.dateTo = document.getElementById('dateTo').value;
+            
+            renderFeedbackTable();
+        }
+        
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            
+            currentFilters = {
+                name: '',
+                status: 'all',
+                dateFrom: '',
+                dateTo: ''
+            };
+            
+            renderFeedbackTable();
+        }
+        
+        // Navigate back to feedback form
+        function goToFeedbackForm() {
+            // In a real application, this would redirect to the form page
+            // For demo purposes, we'll show an alert
+            alert('Redirecting to feedback form...');
+            // Uncomment the line below to actually redirect
+            // window.location.href = 'feedback-form.html';
+        }
+        
+        // Initialize the admin dashboard
+        function initAdminDashboard() {
+            // Load data
+            loadFeedbackData();
+            
+            // Set default dates for filters
+            const today = new Date().toISOString().split('T')[0];
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const oneWeekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+            
+            document.getElementById('dateFrom').value = oneWeekAgoStr;
+            document.getElementById('dateTo').value = today;
+            currentFilters.dateFrom = oneWeekAgoStr;
+            currentFilters.dateTo = today;
+            
+            // Apply initial filters
+            renderFeedbackTable();
+            
+            // Event listeners for buttons
+            document.getElementById('refreshBtn').addEventListener('click', loadFeedbackData);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllFeedback);
+            document.getElementById('backToFormBtn').addEventListener('click', goToFeedbackForm);
+            document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+            document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+            document.getElementById('markAllReviewedBtn').addEventListener('click', markAllAsReviewed);
+            document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedFeedback);
+            document.getElementById('exportCSVBtn').addEventListener('click', exportToCSV);
+            document.getElementById('exportJSONBtn').addEventListener('click', exportToJSON);
+            
+            // Modal close buttons
+            document.getElementById('closeDetailModal').addEventListener('click', () => {
+                feedbackDetailModal.style.display = 'none';
+            });
+            
+            document.getElementById('closeConfirmationModal').addEventListener('click', () => {
+                confirmationModal.style.display = 'none';
+                pendingAction = null;
+            });
+            
+            document.getElementById('cancelActionBtn').addEventListener('click', () => {
+                confirmationModal.style.display = 'none';
+                pendingAction = null;
+            });
+            
+            document.getElementById('confirmActionBtn').addEventListener('click', () => {
+                if (pendingAction) {
+                    pendingAction();
+                }
+                confirmationModal.style.display = 'none';
+                pendingAction = null;
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === feedbackDetailModal) {
+                    feedbackDetailModal.style.display = 'none';
+                }
+                if (event.target === confirmationModal) {
+                    confirmationModal.style.display = 'none';
+                    pendingAction = null;
+                }
+            });
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initAdminDashboard);
+        
+        // Function to add sample data for demonstration (optional)
+        function addSampleData() {
+            if (feedbackData.length === 0) {
+                const sampleData = [
+                    {
+                        id: '1',
+                        name: 'Ahmed Khan',
+                        email: 'ahmed.khan@example.com',
+                        feedback1: 'Portal login is slow in the morning',
+                        feedback2: 'Need better search functionality',
+                        feedback3: 'Reports take too long to generate',
+                        date: new Date().toISOString().split('T')[0],
+                        time: '09:30',
+                        status: 'new'
+                    },
+                    {
+                        id: '2',
+                        name: 'Fatima Ali',
+                        email: 'fatima.ali@example.com',
+                        feedback1: 'Mobile interface needs improvement',
+                        feedback2: '',
+                        feedback3: '',
+                        date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+                        time: '14:15',
+                        status: 'reviewed'
+                    },
+                    {
+                        id: '3',
+                        name: 'Mohammad Hassan',
+                        email: 'm.hassan@example.com',
+                        feedback1: 'Certificate download feature not working',
+                        feedback2: 'Add bulk upload for documents',
+                        feedback3: 'Dashboard needs more analytics',
+                        date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
+                        time: '11:45',
+                        status: 'new'
+                    }
+                ];
+                
+                feedbackData = sampleData;
+                saveFeedbackData();
+                renderFeedbackTable();
+            }
+        }
+        
+        // Uncomment the line below to add sample data on first load
+        // addSampleData();
+    </script>
+</body>
+</html>
