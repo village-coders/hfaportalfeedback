@@ -301,7 +301,33 @@
             color: #888;
         }
         
+        .loading-container {
+            text-align: center;
+            padding: 40px;
+        }
         
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1a5f23;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .export-container {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8fdf9;
+            border-radius: 10px;
+        }
         
         .export-btn {
             background-color: #1a5f23;
@@ -441,6 +467,32 @@
             font-style: italic;
         }
         
+        .api-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .api-status.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .api-status.error {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border-left: 4px solid #d32f2f;
+        }
+        
+        .api-status.loading {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border-left: 4px solid #1565c0;
+        }
+        
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -482,8 +534,6 @@
         <div class="header">
             <div class="logo-container">
                 <img src="/image/HFA logo.jpeg" alt="HFA Logo" class="logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
-                    
-                </div>
                 <div class="header-left">
                     <h1>HFA Admin Dashboard</h1>
                     <p>Staff Feedback Management System</p>
@@ -504,6 +554,9 @@
         </div>
         
         <div class="dashboard-container">
+            <!-- API Status Indicator -->
+            <div id="apiStatus" class="api-status" style="display: none;"></div>
+            
             <!-- Statistics Cards -->
             <div class="stats-container">
                 <div class="stat-card">
@@ -574,7 +627,13 @@
                 </div>
                 
                 <div id="feedbackTableContainer">
-                    <table id="feedbackTable">
+                    <!-- Loading State -->
+                    <div id="loadingState" class="loading-container" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading feedback data from API...</p>
+                    </div>
+                    
+                    <table id="feedbackTable" style="display: none;">
                         <thead>
                             <tr>
                                 <th style="width: 30px;"><input type="checkbox" id="selectAllCheckbox"></th>
@@ -602,6 +661,15 @@
                 </div>
             </div>
             
+            <!-- Export Buttons -->
+            <div class="export-container">
+                <button class="export-btn" id="exportCSVBtn">
+                    <i class="fas fa-file-csv"></i> Export to CSV
+                </button>
+                <button class="export-btn" id="exportJSONBtn" style="margin-left: 15px;">
+                    <i class="fas fa-file-code"></i> Export to JSON
+                </button>
+            </div>
         </div>
     </div>
     
@@ -640,12 +708,18 @@
     </div>
 
     <script>
+        // API Configuration
+        const API_URL = 'https://hfa-backend.onrender.com/api/v1/message';
+        
         // Initialize storage for feedback data
         let feedbackData = [];
         
         // DOM elements
         const feedbackTableBody = document.getElementById('feedbackTableBody');
         const emptyTableState = document.getElementById('emptyTableState');
+        const loadingState = document.getElementById('loadingState');
+        const feedbackTable = document.getElementById('feedbackTable');
+        const apiStatus = document.getElementById('apiStatus');
         const totalSubmissionsEl = document.getElementById('totalSubmissions');
         const todaySubmissionsEl = document.getElementById('todaySubmissions');
         const newSubmissionsEl = document.getElementById('newSubmissions');
@@ -665,6 +739,121 @@
         
         // Action to be confirmed
         let pendingAction = null;
+        
+        // Fetch data from API
+        async function fetchFeedbackFromAPI() {
+            showLoading(true);
+            showApiStatus('Loading data from API...', 'loading');
+            
+            try {
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                showApiStatus('Successfully loaded data from API', 'success');
+                
+                // Transform API data to match our format
+                if (data && Array.isArray(data)) {
+                    feedbackData = data.map(item => {
+                        // Map API fields to our application fields
+                        return {
+                            id: item._id || item.id || generateId(),
+                            name: item.name || item.fullName || 'Anonymous',
+                            email: item.email || 'No email provided',
+                            feedback1: item.feedback1 || item.message || item.feedback || 'No feedback provided',
+                            feedback2: item.feedback2 || item.additionalFeedback || '',
+                            feedback3: item.feedback3 || '',
+                            date: formatDateForStorage(item.date || item.createdAt || new Date().toISOString()),
+                            time: formatTime(item.time || new Date().toISOString()),
+                            status: 'new' // Default status for new entries
+                        };
+                    });
+                } else if (data && typeof data === 'object') {
+                    // Handle if API returns a single object
+                    feedbackData = [{
+                        id: data._id || data.id || generateId(),
+                        name: data.name || data.fullName || 'Anonymous',
+                        email: data.email || 'No email provided',
+                        feedback1: data.feedback1 || data.message || data.feedback || 'No feedback provided',
+                        feedback2: data.feedback2 || data.additionalFeedback || '',
+                        feedback3: data.feedback3 || '',
+                        date: formatDateForStorage(data.date || data.createdAt || new Date().toISOString()),
+                        time: formatTime(data.time || new Date().toISOString()),
+                        status: 'new'
+                    }];
+                } else {
+                    feedbackData = [];
+                    showApiStatus('No data received from API', 'error');
+                }
+                
+                // Save to localStorage for offline access
+                saveFeedbackData();
+                updateStatistics();
+                renderFeedbackTable();
+                
+            } catch (error) {
+                console.error('Error fetching data from API:', error);
+                showApiStatus(`Error: ${error.message}. Using local data instead.`, 'error');
+                
+                // Fallback to localStorage data if API fails
+                loadFeedbackData();
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Show/hide loading state
+        function showLoading(isLoading) {
+            if (isLoading) {
+                loadingState.style.display = 'block';
+                feedbackTable.style.display = 'none';
+                emptyTableState.style.display = 'none';
+            } else {
+                loadingState.style.display = 'none';
+            }
+        }
+        
+        // Show API status message
+        function showApiStatus(message, type) {
+            apiStatus.textContent = message;
+            apiStatus.className = `api-status ${type}`;
+            apiStatus.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    apiStatus.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Format date for storage
+        function formatDateForStorage(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            } catch (error) {
+                return new Date().toISOString().split('T')[0];
+            }
+        }
+        
+        // Format time
+        function formatTime(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            } catch (error) {
+                return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        
+        // Generate unique ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
         
         // Load feedback data from localStorage
         function loadFeedbackData() {
@@ -738,12 +927,12 @@
             
             if (filteredData.length === 0) {
                 emptyTableState.style.display = 'block';
-                document.getElementById('feedbackTable').style.display = 'none';
+                feedbackTable.style.display = 'none';
                 return;
             }
             
             emptyTableState.style.display = 'none';
-            document.getElementById('feedbackTable').style.display = 'table';
+            feedbackTable.style.display = 'table';
             
             // Create table rows
             filteredData.forEach((item, index) => {
@@ -927,6 +1116,7 @@
         
         // Escape HTML to prevent XSS
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
@@ -1087,11 +1277,13 @@
             // window.location.href = 'feedback-form.html';
         }
         
+        // Refresh data from API
+        function refreshData() {
+            fetchFeedbackFromAPI();
+        }
+        
         // Initialize the admin dashboard
         function initAdminDashboard() {
-            // Load data
-            loadFeedbackData();
-            
             // Set default dates for filters
             const today = new Date().toISOString().split('T')[0];
             const oneWeekAgo = new Date();
@@ -1103,11 +1295,11 @@
             currentFilters.dateFrom = oneWeekAgoStr;
             currentFilters.dateTo = today;
             
-            // Apply initial filters
-            renderFeedbackTable();
+            // Load data from API
+            fetchFeedbackFromAPI();
             
             // Event listeners for buttons
-            document.getElementById('refreshBtn').addEventListener('click', loadFeedbackData);
+            document.getElementById('refreshBtn').addEventListener('click', refreshData);
             document.getElementById('clearAllBtn').addEventListener('click', clearAllFeedback);
             document.getElementById('backToFormBtn').addEventListener('click', goToFeedbackForm);
             document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
@@ -1154,54 +1346,6 @@
         
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', initAdminDashboard);
-        
-        // Function to add sample data for demonstration (optional)
-        function addSampleData() {
-            if (feedbackData.length === 0) {
-                const sampleData = [
-                    {
-                        id: '1',
-                        name: 'Ahmed Khan',
-                        email: 'ahmed.khan@example.com',
-                        feedback1: 'Portal login is slow in the morning',
-                        feedback2: 'Need better search functionality',
-                        feedback3: 'Reports take too long to generate',
-                        date: new Date().toISOString().split('T')[0],
-                        time: '09:30',
-                        status: 'new'
-                    },
-                    {
-                        id: '2',
-                        name: 'Fatima Ali',
-                        email: 'fatima.ali@example.com',
-                        feedback1: 'Mobile interface needs improvement',
-                        feedback2: '',
-                        feedback3: '',
-                        date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-                        time: '14:15',
-                        status: 'reviewed'
-                    },
-                    {
-                        id: '3',
-                        name: 'Mohammad Hassan',
-                        email: 'm.hassan@example.com',
-                        feedback1: 'Certificate download feature not working',
-                        feedback2: 'Add bulk upload for documents',
-                        feedback3: 'Dashboard needs more analytics',
-                        date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-                        time: '11:45',
-                        status: 'new'
-                    }
-                ];
-                
-                feedbackData = sampleData;
-                saveFeedbackData();
-                renderFeedbackTable();
-            }
-        }
-        
-        // Uncomment the line below to add sample data on first load
-        // addSampleData();
     </script>
 </body>
 </html>
