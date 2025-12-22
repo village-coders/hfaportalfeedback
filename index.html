@@ -317,6 +317,35 @@
             font-size: 1.5rem;
         }
         
+        /* Search Box Styles */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-container input {
+            padding-left: 45px; /* Space for search icon */
+            border: 1px solid #c5e1c9;
+            background-color: white;
+            height: 50px;
+            font-size: 1rem;
+        }
+        
+        .search-container input:focus {
+            border-color: #1a5f23;
+            box-shadow: 0 0 0 3px rgba(26, 95, 35, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #1a5f23;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
         .api-data-container {
             padding: 10px;
         }
@@ -341,7 +370,7 @@
             align-items: center;
             cursor: pointer;
             padding: 10px 0;
-            flex-wrap: wrap; /* Added to handle mobile better */
+            flex-wrap: wrap;
             gap: 10px;
         }
         
@@ -481,15 +510,33 @@
             font-size: 0.95rem;
         }
         
-        .full-feedback p {
+        /* Detailed Feedback Row styling */
+        .feedback-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 12px;
-            line-height: 1.6;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            gap: 15px;
+        }
+        .feedback-detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .feedback-text-content {
+            flex-grow: 1;
+            font-size: 0.95rem;
         }
         
         .feedback-label {
-            font-weight: 600;
+            font-weight: 700;
             color: #1a5f23;
             margin-right: 5px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
         }
 
         /* STATUS BADGE STYLES */
@@ -499,9 +546,8 @@
             border-radius: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            display: inline-block;
-            margin-left: 10px;
             white-space: nowrap;
+            display: inline-block;
         }
 
         .status-pending {
@@ -523,56 +569,19 @@
         }
         
         @media (max-width: 600px) {
-            .container {
-                margin: 10px auto;
-                border-radius: 10px;
-            }
+            .container { margin: 10px auto; border-radius: 10px; }
+            .header { padding: 20px; }
+            .header h1 { font-size: 1.8rem; }
+            .form-container { padding: 20px; }
+            .logo-img, .logo-fallback { max-width: 100px; max-height: 100px; }
+            .logo-fallback { width: 100px; height: 100px; font-size: 2.2rem; }
+            .api-data-section { padding: 15px; margin-top: 20px; }
+            .api-data-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .view-toggle-btn { align-self: flex-start; width: 100%; justify-content: center; }
             
-            .header {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .form-container {
-                padding: 20px;
-            }
-            
-            .logo-img, .logo-fallback {
-                max-width: 100px;
-                max-height: 100px;
-            }
-            
-            .logo-fallback {
-                width: 100px;
-                height: 100px;
-                font-size: 2.2rem;
-            }
-            
-            .api-data-section {
-                padding: 15px;
-                margin-top: 20px;
-            }
-            
-            .api-data-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .view-toggle-btn {
-                align-self: flex-start;
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .status-badge {
-                margin-left: 0;
-                margin-top: 5px;
-                display: table; /* Forces it to sit on its own line on tiny screens */
-            }
+            /* Stack badge below text on mobile */
+            .feedback-detail-row { flex-direction: column; gap: 5px; }
+            .status-badge { align-self: flex-start; margin-left: 0; }
         }
     </style>
 </head>
@@ -672,6 +681,12 @@
             
             <div class="api-data-section" id="apiDataSection">
                 <h3><i class="fas fa-database"></i> Recent Feedback Submissions</h3>
+                
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search by staff name...">
+                </div>
+
                 <div id="apiLoading" class="api-loading">
                     <i class="fas fa-spinner fa-spin"></i> Loading Feedbacks...
                 </div>
@@ -680,7 +695,7 @@
                     <p id="apiErrorText">Failed to load data from API.</p>
                 </div>
                 <div id="apiDataContainer" class="api-data-container" style="display: none;">
-                    </div>
+                </div>
                 <button class="refresh-api-btn" id="refreshApiBtn">
                     <i class="fas fa-sync-alt"></i> Refresh Data
                 </button>
@@ -694,29 +709,26 @@
     </div>
 
     <script>
-        // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
         
-        // STATUS MANAGEMENT (Synced with Admin Page via LocalStorage)
-        const STORAGE_KEY = 'hfa_admin_statuses';
-        
-        // Helper to get local statuses
+        // --- GLOBAL VARIABLES ---
+        const STORAGE_KEY = 'hfa_admin_statuses_detailed';
+        let allFeedbackData = []; // Store fetched data for searching
+
+        // --- HELPERS ---
         const getLocalStatuses = () => {
             const stored = localStorage.getItem(STORAGE_KEY);
             return stored ? JSON.parse(stored) : {};
         };
 
-        // Helper ID generator (MUST MATCH ADMIN PAGE LOGIC)
         const generateId = (item) => {
             return item._id || `${item.timestamp || item.createdAt}-${item.email}`;
         };
 
-        // Check if logo image exists, show fallback if not
+        // Logo Fallback
         window.addEventListener('load', function() {
             const logoImg = document.querySelector('.logo-img');
             const logoFallback = document.getElementById('logoFallback');
-            
-            // If image hasn't loaded after 2 seconds, show fallback
             setTimeout(() => {
                 if (logoImg && logoImg.naturalHeight === 0) {
                     logoImg.style.display = 'none';
@@ -725,7 +737,7 @@
             }, 2000);
         });
         
-        // Character count functionality for all feedback fields - UPDATED TO 200 CHARACTERS
+        // Form Logic
         const feedbackFields = ['feedback1', 'feedback2', 'feedback3'];
         const MAX_CHARS = 200;
         
@@ -734,23 +746,13 @@
             if (textarea) {
                 const remainingSpan = document.getElementById(`remaining${index + 1}`);
                 const charCountDiv = document.getElementById(`count${index + 1}`);
-                
-                // Update the max attribute to 200
                 textarea.setAttribute('maxlength', MAX_CHARS);
-                
-                // Update the display text
-                const maxSpan = charCountDiv.querySelector('span:nth-child(2)');
-                if (maxSpan) maxSpan.textContent = `Max: ${MAX_CHARS}`;
+                if (charCountDiv.querySelector('span:nth-child(2)')) charCountDiv.querySelector('span:nth-child(2)').textContent = `Max: ${MAX_CHARS}`;
                 
                 textarea.addEventListener('input', function() {
                     const currentLength = this.value.length;
                     const remaining = MAX_CHARS - currentLength;
-                    
-                    if (remainingSpan) {
-                        remainingSpan.textContent = remaining;
-                    }
-                    
-                    // Update styling when limit is reached
+                    if (remainingSpan) remainingSpan.textContent = remaining;
                     if (charCountDiv) {
                         if (remaining <= 0) {
                             charCountDiv.classList.add('limit-reached');
@@ -761,116 +763,60 @@
                     }
                 });
                 
-                // Initialize character count on page load
-                const currentLength = textarea.value.length;
-                const remaining = MAX_CHARS - currentLength;
-                if (remainingSpan) {
-                    remainingSpan.textContent = remaining;
-                    
-                    if (remaining <= 0) {
-                        if (charCountDiv) charCountDiv.classList.add('limit-reached');
-                        remainingSpan.textContent = '0';
-                    }
-                }
+                // Initialize
+                if (remainingSpan) remainingSpan.textContent = MAX_CHARS;
             }
         });
         
-        // Show/hide functionality for additional feedback fields
+        // Show/Hide Fields Logic
         document.getElementById('addFeedback2Btn').addEventListener('click', function() {
-            // Show feedback 2 field
             document.getElementById('feedback2Container').classList.remove('hidden-feedback');
-            // Show add feedback 3 button
             document.getElementById('addFeedback3Btn').classList.remove('hidden-feedback');
-            // Hide this button
             this.classList.add('hidden-feedback');
-            
-            // Focus on the textarea
             document.getElementById('feedback2').focus();
         });
         
         document.getElementById('removeFeedback2Btn').addEventListener('click', function() {
-            // Hide feedback 2 field
             document.getElementById('feedback2Container').classList.add('hidden-feedback');
-            // Clear the textarea
             document.getElementById('feedback2').value = '';
-            // Reset character count
             document.getElementById('remaining2').textContent = MAX_CHARS;
-            document.getElementById('count2').classList.remove('limit-reached');
-            // Show add feedback 2 button again
             document.getElementById('addFeedback2Btn').classList.remove('hidden-feedback');
-            // Hide feedback 3 if it's visible
             document.getElementById('feedback3Container').classList.add('hidden-feedback');
             document.getElementById('feedback3').value = '';
-            document.getElementById('remaining3').textContent = MAX_CHARS;
-            document.getElementById('count3').classList.remove('limit-reached');
-            // Hide add feedback 3 button
             document.getElementById('addFeedback3Btn').classList.add('hidden-feedback');
         });
         
         document.getElementById('addFeedback3Btn').addEventListener('click', function() {
-            // Show feedback 3 field
             document.getElementById('feedback3Container').classList.remove('hidden-feedback');
-            // Hide this button
             this.classList.add('hidden-feedback');
-            
-            // Focus on the textarea
             document.getElementById('feedback3').focus();
         });
         
         document.getElementById('removeFeedback3Btn').addEventListener('click', function() {
-            // Hide feedback 3 field
             document.getElementById('feedback3Container').classList.add('hidden-feedback');
-            // Clear the textarea
             document.getElementById('feedback3').value = '';
-            // Reset character count
             document.getElementById('remaining3').textContent = MAX_CHARS;
-            document.getElementById('count3').classList.remove('limit-reached');
-            // Show add feedback 3 button again
             document.getElementById('addFeedback3Btn').classList.remove('hidden-feedback');
         });
         
-        // Add input validation for name field (letters and spaces only)
         document.getElementById('name').addEventListener('input', function() {
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
         });
         
-        // Form submission handling with API integration
+        // Submit Logic
         document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            // Hide any previous error messages
             document.getElementById('errorMessage').style.display = 'none';
             
-            // Basic validation
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const feedback1 = document.getElementById('feedback1').value.trim();
-            const feedback2 = document.getElementById('feedback2').value.trim();
-            const feedback3 = document.getElementById('feedback3').value.trim();
-            
-            if (!name || !email || !feedback1) {
-                showError('Please fill in all required fields (Name, Email, and at least one feedback point).');
-                return;
-            }
-            
-            // Email validation
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email)) {
-                showError('Please enter a valid email address.');
-                return;
-            }
-            
-            // Prepare the data for API
             const feedbackData = {
-                name: name,
-                email: email,
-                feedback1: feedback1,
-                feedback2: feedback2 || null,
-                feedback3: feedback3 || null,
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                feedback1: document.getElementById('feedback1').value.trim(),
+                feedback2: document.getElementById('feedback2').value.trim() || null,
+                feedback3: document.getElementById('feedback3').value.trim() || null,
                 timestamp: new Date().toISOString()
             };
             
-            // Show loading state
             const submitBtn = document.querySelector('.submit-btn');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
@@ -879,280 +825,189 @@
             try {
                 const response = await fetch('https://hfa-backend.onrender.com/api/v1/message', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(feedbackData)
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    console.log('API Response:', result);
-                    
-                    // Show thank you message
                     document.getElementById('feedbackForm').style.display = 'none';
                     document.getElementById('thankYouMessage').style.display = 'block';
-                    
-                    // Refresh the API data display
                     fetchAPIData();
-                    
-                    // Reset form after 5 seconds
-                    setTimeout(() => {
-                        resetForm(submitBtn, originalText);
-                    }, 5000);
-                    
+                    setTimeout(() => { resetForm(submitBtn, originalText); }, 5000);
                 } else {
-                    // Try to get error message from response
-                    let errorMsg = 'Failed to submit feedback. Please try again.';
-                    try {
-                        const errorResult = await response.json();
-                        if (errorResult.message) {
-                            errorMsg = errorResult.message;
-                        }
-                    } catch (e) {
-                        // If response is not JSON, use status text
-                        errorMsg = `Server error: ${response.status} ${response.statusText}`;
-                    }
-                    throw new Error(errorMsg);
+                    throw new Error('Failed to submit feedback.');
                 }
-                
             } catch (error) {
-                console.error('Error:', error);
-                
-                // Show error message
-                document.getElementById('errorText').textContent = error.message || 'Sorry, there was an error submitting your feedback. Please check your connection and try again.';
-                document.getElementById('errorMessage').style.display = 'block';
-                
-                // Scroll to error message
-                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
-                
-                // Reset button
-                submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to Submit';
-                submitBtn.classList.add('error');
-                
-                // Reset button after 3 seconds
-                setTimeout(() => {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.classList.remove('error');
-                    submitBtn.disabled = false;
-                }, 3000);
+                showError(error.message || 'Submission failed.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
         
-        // Function to show error message
         function showError(message) {
             document.getElementById('errorText').textContent = message;
             document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Function to reset the form
         function resetForm(submitBtn, originalText) {
             document.getElementById('feedbackForm').reset();
             document.getElementById('feedbackForm').style.display = 'block';
             document.getElementById('thankYouMessage').style.display = 'none';
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
-            submitBtn.classList.remove('error');
-            
-            // Reset character counts
-            feedbackFields.forEach((fieldId, index) => {
-                const remainingSpan = document.getElementById(`remaining${index + 1}`);
-                const charCountDiv = document.getElementById(`count${index + 1}`);
-                if (remainingSpan) remainingSpan.textContent = MAX_CHARS;
-                if (charCountDiv) charCountDiv.classList.remove('limit-reached');
-            });
-            
-            // Hide additional feedback fields
             document.getElementById('feedback2Container').classList.add('hidden-feedback');
             document.getElementById('feedback3Container').classList.add('hidden-feedback');
             document.getElementById('addFeedback3Btn').classList.add('hidden-feedback');
             document.getElementById('addFeedback2Btn').classList.remove('hidden-feedback');
-            
-            // Hide error message if visible
             document.getElementById('errorMessage').style.display = 'none';
         }
         
-        // API Data Fetching and Display Functionality with toggle view
+        // --- API & SEARCH LOGIC ---
+        
         async function fetchAPIData() {
             const apiDataSection = document.getElementById('apiDataSection');
             const apiLoading = document.getElementById('apiLoading');
             const apiError = document.getElementById('apiError');
             const apiDataContainer = document.getElementById('apiDataContainer');
-            const apiErrorText = document.getElementById('apiErrorText');
             
-            // Show loading state
             apiLoading.style.display = 'block';
             apiError.style.display = 'none';
             apiDataContainer.style.display = 'none';
             
             try {
-                // Fetch data from API
                 const response = await fetch('https://hfa-backend.onrender.com/api/v1/message');
-                
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error('API Error');
                 
                 const data = await response.json();
-                
-                // Hide loading
                 apiLoading.style.display = 'none';
-                
-                // Show the API section
                 apiDataSection.style.display = 'block';
                 
-                // Clear previous data
-                apiDataContainer.innerHTML = '';
-                
-                // Get saved statuses from Local Storage
-                const localStatuses = getLocalStatuses();
-
-                // Check if data exists and is an array
                 if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-                    
-                    // Sort data (Newest First)
-                    const sortedData = data.data.sort((a, b) => {
-                        return new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt);
-                    });
-
-                    // Display each item with toggle functionality
-                    sortedData.forEach((item, index) => {
-                        const dataItem = document.createElement('div');
-                        dataItem.className = 'api-data-item';
-                        
-                        // Format the data for display
-                        const name = item.name || 'Anonymous';
-                        const email = item.email || 'No email provided';
-                        const feedback1 = item.feedback1 || 'No feedback provided';
-                        const feedback2 = item.feedback2 || 'Not provided';
-                        const feedback3 = item.feedback3 || 'Not provided';
-
-                        // --- STATUS LOGIC ---
-                        // Generate same ID as Admin page
-                        const uniqueId = generateId(item);
-                        // Get status or default to pending
-                        const status = localStatuses[uniqueId] || 'pending';
-                        
-                        // Status text mapping
-                        let statusText = 'Pending';
-                        if (status === 'in-progress') statusText = 'In Progress';
-                        if (status === 'resolved') statusText = 'Resolved';
-                        // --------------------
-                        
-                        // Format timestamp
-                        let timestamp = 'Unknown date';
-                        if (item.timestamp || item.createdAt) {
-                            const date = new Date(item.timestamp || item.createdAt);
-                            timestamp = date.toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
-                        }
-                        
-                        // Count how many feedbacks are provided
-                        let feedbackCount = 1; // feedback1 is always required
-                        if (feedback2 && feedback2 !== 'Not provided' && feedback2.trim() !== '') feedbackCount++;
-                        if (feedback3 && feedback3 !== 'Not provided' && feedback3.trim() !== '') feedbackCount++;
-                        
-                        // Create HTML for the data item with toggle functionality
-                        dataItem.innerHTML = `
-                            <div class="api-data-header" onclick="toggleFeedbackDetails(${index})">
-                                <div class="api-data-header-left">
-                                    <h4>
-                                        ${name}
-                                        <span class="feedback-counter">${feedbackCount} feedback${feedbackCount !== 1 ? 's' : ''}</span>
-                                        <span class="status-badge status-${status}">${statusText}</span>
-                                    </h4>
-                                </div>
-                                <button class="view-toggle-btn" id="viewToggle${index}">
-                                    <i class="fas fa-eye"></i> View Details
-                                </button>
-                            </div>
-                            <div class="api-data-details" id="feedbackDetails${index}">
-                                <p><span class="feedback-label">Email:</span> ${email}</p>
-                                
-                                <div class="full-feedback">
-                                    <h5>Full Feedback Details:</h5>
-                                    <p><span class="feedback-label">Feedback 1:</span> ${feedback1}</p>
-                                    ${feedback2 && feedback2 !== 'Not provided' && feedback2.trim() !== '' ? 
-                                        `<p><span class="feedback-label">Feedback 2:</span> ${feedback2}</p>` : ''}
-                                    ${feedback3 && feedback3 !== 'Not provided' && feedback3.trim() !== '' ? 
-                                        `<p><span class="feedback-label">Feedback 3:</span> ${feedback3}</p>` : ''}
-                                </div>
-                                
-                                <p class="timestamp"><i class="far fa-clock"></i> Submitted: ${timestamp}</p>
-                            </div>
-                        `;
-                        
-                        apiDataContainer.appendChild(dataItem);
-                    });
-                    
-                    // Show the container
-                    apiDataContainer.style.display = 'block';
+                    // Store and sort data
+                    allFeedbackData = data.data.sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt));
+                    // Initial Render
+                    renderFeedbackList(allFeedbackData);
                 } else {
-                    // No data available
-                    const noDataMessage = document.createElement('div');
-                    noDataMessage.className = 'no-data';
-                    noDataMessage.innerHTML = `
-                        <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; color: #ccc;"></i>
-                        <p>No feedback submissions found in the database.</p>
-                        <p>Be the first to submit feedback!</p>
-                    `;
-                    apiDataContainer.appendChild(noDataMessage);
+                    apiDataContainer.innerHTML = `<div class="no-data"><p>No feedback found.</p></div>`;
                     apiDataContainer.style.display = 'block';
                 }
-                
             } catch (error) {
-                console.error('Error fetching API data:', error);
-                
-                // Hide loading and show error
                 apiLoading.style.display = 'none';
-                
-                // Show the API section even with error
                 apiDataSection.style.display = 'block';
-                
-                // Set error message
-                apiErrorText.textContent = error.message || 'Unable to connect to the server. Please try again later.';
+                document.getElementById('apiErrorText').textContent = 'Unable to connect to server.';
                 apiError.style.display = 'block';
             }
         }
+
+        function renderFeedbackList(dataToRender) {
+            const apiDataContainer = document.getElementById('apiDataContainer');
+            apiDataContainer.innerHTML = '';
+            const localStatuses = getLocalStatuses();
+
+            if (dataToRender.length === 0) {
+                apiDataContainer.innerHTML = `<div class="no-data"><p>No results found for your search.</p></div>`;
+                apiDataContainer.style.display = 'block';
+                return;
+            }
+
+            dataToRender.forEach((item, index) => {
+                const dataItem = document.createElement('div');
+                dataItem.className = 'api-data-item';
+                
+                const baseId = generateId(item);
+                const date = new Date(item.timestamp || item.createdAt);
+                const timestamp = date.toLocaleString('en-US');
+                
+                // Helper for badges
+                const getBadge = (key) => {
+                    const status = localStatuses[key] || 'pending';
+                    let label = 'Pending';
+                    if (status === 'in-progress') label = 'In Progress';
+                    if (status === 'resolved') label = 'Resolved';
+                    return `<span class="status-badge status-${status}">${label}</span>`;
+                };
+                
+                let count = 1;
+                if (item.feedback2 && item.feedback2 !== 'Not provided' && item.feedback2.trim() !== '') count++;
+                if (item.feedback3 && item.feedback3 !== 'Not provided' && item.feedback3.trim() !== '') count++;
+                
+                // Build Details HTML
+                let detailsHTML = `
+                    <div class="feedback-detail-row">
+                        <div class="feedback-text-content"><span class="feedback-label">1:</span> ${item.feedback1}</div>
+                        ${getBadge(baseId + '_f1')}
+                    </div>
+                `;
+
+                if (item.feedback2 && item.feedback2 !== 'Not provided' && item.feedback2.trim() !== '') {
+                    detailsHTML += `
+                        <div class="feedback-detail-row">
+                            <div class="feedback-text-content"><span class="feedback-label">2:</span> ${item.feedback2}</div>
+                            ${getBadge(baseId + '_f2')}
+                        </div>
+                    `;
+                }
+
+                if (item.feedback3 && item.feedback3 !== 'Not provided' && item.feedback3.trim() !== '') {
+                    detailsHTML += `
+                        <div class="feedback-detail-row">
+                            <div class="feedback-text-content"><span class="feedback-label">3:</span> ${item.feedback3}</div>
+                            ${getBadge(baseId + '_f3')}
+                        </div>
+                    `;
+                }
+
+                dataItem.innerHTML = `
+                    <div class="api-data-header" onclick="toggleFeedbackDetails(${index})">
+                        <div class="api-data-header-left">
+                            <h4>
+                                ${item.name || 'Anonymous'}
+                                <span class="feedback-counter">${count} feedback${count !== 1 ? 's' : ''}</span>
+                            </h4>
+                        </div>
+                        <button class="view-toggle-btn" id="viewToggle${index}">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                    </div>
+                    <div class="api-data-details" id="feedbackDetails${index}">
+                        <p><span class="feedback-label">Email:</span> ${item.email || 'No email'}</p>
+                        <div class="full-feedback">
+                            <h5>Feedback Details & Status:</h5>
+                            ${detailsHTML}
+                        </div>
+                        <p class="timestamp"><i class="far fa-clock"></i> Submitted: ${timestamp}</p>
+                    </div>
+                `;
+                
+                apiDataContainer.appendChild(dataItem);
+            });
+            apiDataContainer.style.display = 'block';
+        }
+
+        // Search Listener
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredData = allFeedbackData.filter(item => 
+                (item.name || '').toLowerCase().includes(searchTerm)
+            );
+            renderFeedbackList(filteredData);
+        });
         
-        // Toggle function for showing/hiding feedback details
         window.toggleFeedbackDetails = function(index) {
             const detailsElement = document.getElementById(`feedbackDetails${index}`);
             const toggleButton = document.getElementById(`viewToggle${index}`);
             
             if (detailsElement.style.display === 'block') {
-                // Hide details
                 detailsElement.style.display = 'none';
                 toggleButton.innerHTML = '<i class="fas fa-eye"></i> View Details';
             } else {
-                // Show details
                 detailsElement.style.display = 'block';
                 toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Details';
             }
         };
         
-        // Add refresh button functionality
         document.getElementById('refreshApiBtn').addEventListener('click', fetchAPIData);
-        
-        // Initial fetch of API data when page loads
         document.addEventListener('DOMContentLoaded', fetchAPIData);
-        
-        // Optional: Add a function to handle network errors more gracefully
-        window.addEventListener('online', () => {
-            console.log('Network connection restored');
-            // Try to fetch API data again if we're online
-            fetchAPIData();
-        });
-        
-        window.addEventListener('offline', () => {
-            showError('You are currently offline. Please check your internet connection and try again.');
-        });
     </script>
 </body>
 </html>
