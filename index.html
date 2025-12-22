@@ -293,14 +293,14 @@
             gap: 10px;
         }
         
-        /* API Data Display Section - Updated for toggle view */
+        /* API Data Display Section */
         .api-data-section {
             margin-top: 40px;
             padding: 25px;
             background-color: #f8fdf9;
             border: 1px solid #d4ecd8;
             border-radius: 10px;
-            display: none; /* Hidden by default, will show when data loads */
+            display: none;
         }
         
         .api-data-section h3 {
@@ -341,8 +341,17 @@
             align-items: center;
             cursor: pointer;
             padding: 10px 0;
+            flex-wrap: wrap; /* Added to handle mobile better */
+            gap: 10px;
         }
         
+        .api-data-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
         .api-data-header h4 {
             color: #1a5f23;
             font-size: 1.1rem;
@@ -482,6 +491,36 @@
             color: #1a5f23;
             margin-right: 5px;
         }
+
+        /* STATUS BADGE STYLES */
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .status-in-progress {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        .status-resolved {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
         
         @media (max-width: 600px) {
             .container {
@@ -525,6 +564,14 @@
             
             .view-toggle-btn {
                 align-self: flex-start;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .status-badge {
+                margin-left: 0;
+                margin-top: 5px;
+                display: table; /* Forces it to sit on its own line on tiny screens */
             }
         }
     </style>
@@ -533,7 +580,6 @@
     <div class="container">
         <div class="header">
             <div class="logo-container">
-                <!-- Logo with fallback if image fails to load -->
                 <img src="/image/HFA logo.jpeg" alt="HFA Logo" class="logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
                 <div id="logoFallback" class="logo-fallback" style="display: none;">
                     HFA
@@ -576,12 +622,10 @@
                     </div>
                 </div>
                 
-                <!-- Add Feedback 2 Button -->
                 <button type="button" class="add-feedback-btn" id="addFeedback2Btn">
                     <i class="fas fa-plus-circle"></i> Add Feedback 2 (Optional)
                 </button>
                 
-                <!-- Feedback 2 Field (Initially Hidden) -->
                 <div class="feedback-item hidden-feedback" id="feedback2Container">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label for="feedback2">Add Feedback 2:</label>
@@ -596,12 +640,10 @@
                     </div>
                 </div>
                 
-                <!-- Add Feedback 3 Button -->
                 <button type="button" class="add-feedback-btn hidden-feedback" id="addFeedback3Btn">
                     <i class="fas fa-plus-circle"></i> Add Feedback 3 (Optional)
                 </button>
                 
-                <!-- Feedback 3 Field (Initially Hidden) -->
                 <div class="feedback-item hidden-feedback" id="feedback3Container">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label for="feedback3">Add Feedback 3:</label>
@@ -628,7 +670,6 @@
                 <p style="margin-top: 15px; font-style: italic;">You will be redirected in 5 seconds...</p>
             </div>
             
-            <!-- API Data Display Section -->
             <div class="api-data-section" id="apiDataSection">
                 <h3><i class="fas fa-database"></i> Recent Feedback Submissions</h3>
                 <div id="apiLoading" class="api-loading">
@@ -639,8 +680,7 @@
                     <p id="apiErrorText">Failed to load data from API.</p>
                 </div>
                 <div id="apiDataContainer" class="api-data-container" style="display: none;">
-                    <!-- API data will be displayed here -->
-                </div>
+                    </div>
                 <button class="refresh-api-btn" id="refreshApiBtn">
                     <i class="fas fa-sync-alt"></i> Refresh Data
                 </button>
@@ -657,6 +697,20 @@
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
         
+        // STATUS MANAGEMENT (Synced with Admin Page via LocalStorage)
+        const STORAGE_KEY = 'hfa_admin_statuses';
+        
+        // Helper to get local statuses
+        const getLocalStatuses = () => {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : {};
+        };
+
+        // Helper ID generator (MUST MATCH ADMIN PAGE LOGIC)
+        const generateId = (item) => {
+            return item._id || `${item.timestamp || item.createdAt}-${item.email}`;
+        };
+
         // Check if logo image exists, show fallback if not
         window.addEventListener('load', function() {
             const logoImg = document.querySelector('.logo-img');
@@ -951,10 +1005,19 @@
                 // Clear previous data
                 apiDataContainer.innerHTML = '';
                 
+                // Get saved statuses from Local Storage
+                const localStatuses = getLocalStatuses();
+
                 // Check if data exists and is an array
                 if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+                    
+                    // Sort data (Newest First)
+                    const sortedData = data.data.sort((a, b) => {
+                        return new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt);
+                    });
+
                     // Display each item with toggle functionality
-                    data.data.forEach((item, index) => {
+                    sortedData.forEach((item, index) => {
                         const dataItem = document.createElement('div');
                         dataItem.className = 'api-data-item';
                         
@@ -964,6 +1027,18 @@
                         const feedback1 = item.feedback1 || 'No feedback provided';
                         const feedback2 = item.feedback2 || 'Not provided';
                         const feedback3 = item.feedback3 || 'Not provided';
+
+                        // --- STATUS LOGIC ---
+                        // Generate same ID as Admin page
+                        const uniqueId = generateId(item);
+                        // Get status or default to pending
+                        const status = localStatuses[uniqueId] || 'pending';
+                        
+                        // Status text mapping
+                        let statusText = 'Pending';
+                        if (status === 'in-progress') statusText = 'In Progress';
+                        if (status === 'resolved') statusText = 'Resolved';
+                        // --------------------
                         
                         // Format timestamp
                         let timestamp = 'Unknown date';
@@ -986,10 +1061,13 @@
                         // Create HTML for the data item with toggle functionality
                         dataItem.innerHTML = `
                             <div class="api-data-header" onclick="toggleFeedbackDetails(${index})">
-                                <h4>
-                                    ${name}
-                                    <span class="feedback-counter">${feedbackCount} feedback${feedbackCount !== 1 ? 's' : ''}</span>
-                                </h4>
+                                <div class="api-data-header-left">
+                                    <h4>
+                                        ${name}
+                                        <span class="feedback-counter">${feedbackCount} feedback${feedbackCount !== 1 ? 's' : ''}</span>
+                                        <span class="status-badge status-${status}">${statusText}</span>
+                                    </h4>
+                                </div>
                                 <button class="view-toggle-btn" id="viewToggle${index}">
                                     <i class="fas fa-eye"></i> View Details
                                 </button>
